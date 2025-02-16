@@ -1,0 +1,197 @@
+{% if message %}
+<div class="transform transition-all duration-500 opacity-0 animate-message bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-lg mb-6">
+    {{ message }}
+</div>
+{% endif %}
+
+<form hx-post="{% url 'academics' %}" 
+      hx-target="#form-container"
+      hx-swap="innerHTML"
+      class="space-y-6 animate-form">
+    {% csrf_token %}
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="form-group animate-field">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Course</label>
+            <div class="relative">
+                <select name="course" required 
+                        class="block w-full px-4 py-3 rounded-lg bg-white border border-gray-300 focus:border-[#002147] focus:ring-2 focus:ring-[#002147] focus:ring-opacity-30 transition-all duration-300 appearance-none">
+                    {% for value, label in courses %}
+                        <option value="{{ value }}" {% if academic_data.course == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                    <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group animate-field">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Department</label>
+            <input type="text" 
+                   name="department" 
+                   value="{{ academic_data.department|default:'' }}"
+                   required
+                   class="block w-full px-4 py-3 rounded-lg bg-white border border-gray-300 focus:border-[#002147] focus:ring-2 focus:ring-[#002147] focus:ring-opacity-30 transition-all duration-300">
+        </div>
+
+        <div class="form-group animate-field">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Current Year</label>
+            <div class="relative">
+                <select name="current_year" required
+                        class="block w-full px-4 py-3 rounded-lg bg-white border border-gray-300 focus:border-[#002147] focus:ring-2 focus:ring-[#002147] focus:ring-opacity-30 transition-all duration-300 appearance-none">
+                    {% for value, label in years %}
+                        <option value="{{ value }}" {% if academic_data.current_year == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                    <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group animate-field">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Current Semester</label>
+            <div class="relative">
+                <select name="current_semester" required
+                        class="block w-full px-4 py-3 rounded-lg bg-white border border-gray-300 focus:border-[#002147] focus:ring-2 focus:ring-[#002147] focus:ring-opacity-30 transition-all duration-300 appearance-none">
+                    {% for value, label in semesters %}
+                        <option value="{{ value }}" {% if academic_data.current_semester == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                    <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group animate-field">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Year of Joining</label>
+            <input type="date" 
+                   name="year_joining" 
+                   value="{{ academic_data.year_joining|date:'Y-m-d'|default:'' }}"
+                   required
+                   class="block w-full px-4 py-3 rounded-lg bg-white border border-gray-300 focus:border-[#002147] focus:ring-2 focus:ring-[#002147] focus:ring-opacity-30 transition-all duration-300">
+        </div>
+
+        <div class="form-group animate-field">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Type of Admission</label>
+            <input type="text" 
+                   name="type_of_admission" 
+                   value="{{ academic_data.type_of_admission|default:'' }}"
+                   required
+                   class="block w-full px-4 py-3 rounded-lg bg-white border border-gray-300 focus:border-[#002147] focus:ring-2 focus:ring-[#002147] focus:ring-opacity-30 transition-all duration-300">
+        </div>
+
+        <div class="form-group animate-field">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Admission Type</label>
+            <input type="text" 
+                   name="admission_type" 
+                   value="{{ academic_data.admission_type|default:'' }}"
+                   required
+                   class="block w-full px-4 py-3 rounded-lg bg-white border border-gray-300 focus:border-[#002147] focus:ring-2 focus:ring-[#002147] focus:ring-opacity-30 transition-all duration-300">
+        </div>
+
+        <div class="form-group animate-field">
+            <label class="block text-sm font-medium text-gray-700 mb-2">EMIS Number</label>
+            <input type="number" 
+                   name="emis_number" 
+                   value="{{ academic_data.emis_number|default:'' }}"
+                   required
+                   class="block w-full px-4 py-3 rounded-lg bg-white border border-gray-300 focus:border-[#002147] focus:ring-2 focus:ring-[#002147] focus:ring-opacity-30 transition-all duration-300">
+        </div>
+
+        <div class="form-group animate-field">
+            <label class="block text-sm font-medium text-gray-700 mb-2">UMIS Number</label>
+            <input type="number" 
+                   name="umis_number" 
+                   value="{{ academic_data.umis_number|default:'' }}"
+                   required
+                   class="block w-full px-4 py-3 rounded-lg bg-white border border-gray-300 focus:border-[#002147] focus:ring-2 focus:ring-[#002147] focus:ring-opacity-30 transition-all duration-300">
+        </div>
+
+        <div class="form-group animate-field">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Class Incharge</label>
+            <input type="text" 
+                   name="class_incharge" 
+                   value="{{ academic_data.class_incharge|default:'' }}"
+                   required
+                   class="block w-full px-4 py-3 rounded-lg bg-white border border-gray-300 focus:border-[#002147] focus:ring-2 focus:ring-[#002147] focus:ring-opacity-30 transition-all duration-300">
+        </div>
+
+        <div class="form-group animate-field">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Class Room Number</label>
+            <input type="number" 
+                   name="class_room_number" 
+                   value="{{ academic_data.class_room_number|default:'' }}"
+                   required
+                   class="block w-full px-4 py-3 rounded-lg bg-white border border-gray-300 focus:border-[#002147] focus:ring-2 focus:ring-[#002147] focus:ring-opacity-30 transition-all duration-300">
+        </div>
+    </div>
+
+    <div class="form-group mt-8 animate-button">
+        <button type="submit"
+                class="w-full md:w-auto px-6 py-3 bg-[#002147] text-white rounded-lg hover:bg-[#002147]/90 focus:ring-4 focus:ring-[#002147]/30 transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2">
+            <span>{% if academic_data %}Update{% else %}Save{% endif %} Academic Information</span>
+            <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+        </button>
+    </div>
+</form>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize GSAP animations
+    gsap.from('.animate-message', {
+        opacity: 0,
+        y: -20,
+        duration: 0.5,
+        ease: 'power3.out'
+    });
+
+    gsap.from('.animate-field', {
+        opacity: 0,
+        y: 20,
+        duration: 0.5,
+        stagger: 0.1,
+        ease: 'power3.out'
+    });
+
+    gsap.from('.animate-button', {
+        opacity: 0,
+        y: 20,
+        duration: 0.5,
+        delay: 0.5,
+        ease: 'power3.out'
+    });
+
+    // Form submission animation
+    const form = document.querySelector('form');
+    form.addEventListener('htmx:beforeRequest', function() {
+        gsap.to('.animate-button button', {
+            scale: 0.95,
+            duration: 0.2
+        });
+    });
+
+    form.addEventListener('htmx:afterRequest', function() {
+        gsap.to('.animate-button button', {
+            scale: 1,
+            duration: 0.2
+        });
+    });
+});
+</script>

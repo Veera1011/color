@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academic Performance Visualization</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+
+<style>
+  .nav-header {
+    animation: slideDown 0.8s ease-out;
+  }
+  
+  .content-slide {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.5s ease-out forwards;
+  }
+  
+  .title-slide {
+    animation-delay: 0.3s;
+  }
+  
+  .info-slide {
+    animation-delay: 0.5s;
+  }
+  
+  .corner-btn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 50;
+    background: #002147;
+    padding: 12px;
+    border-radius: 50%;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    animation: fadeIn 0.5s ease-out 0.7s forwards;
+    opacity: 0;
+  }
+
+  .corner-btn:hover {
+    background: #FFD700;
+    transform: scale(1.1);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .corner-btn svg {
+    width: 24px;
+    height: 24px;
+    color: white;
+    transition: transform 0.3s ease;
+  }
+
+  .corner-btn:hover svg {
+    transform: translateX(-4px);
+    color: #002147;
+  }
+
+  .tooltip {
+    position: absolute;
+    left: 120%;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #002147;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 14px;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+
+  .corner-btn:hover .tooltip {
+    opacity: 1;
+  }
+
+  @keyframes slideDown {
+    from {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes fadeUp {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeIn {
+    to {
+      opacity: 1;
+    }
+  }
+</style>
+    <script>
+        // Updated to use session_id instead of JWT
+        document.body.addEventListener('htmx:configRequest', function(evt) {
+            // Session ID is automatically included in cookies
+            // No need to manually add it to headers
+        });
+
+        // Handle successful login redirect
+        document.body.addEventListener('htmx:afterSettle', function(evt) {
+            if (evt.detail.xhr.status === 200 && evt.detail.xhr.getResponseHeader('HX-Redirect')) {
+                window.location.href = evt.detail.xhr.getResponseHeader('HX-Redirect');
+            }
+        });
+
+        // Check session on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const session_id = document.cookie.split('; ').find(row => row.startsWith('session_id='));
+            if (!session_id) {
+                window.location.href = '/student/login/';
+            }
+        });
+    </script>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen">
+        <!-- Header -->
+       <!-- Add required CSS and JS in head -->
+
+
+<header class="nav-header bg-[#002147] shadow-lg">
+    <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+        <!-- Main header content -->
+        <div class="flex flex-col md:flex-row justify-between items-center">
+            <h1 class="content-slide title-slide text-2xl md:text-3xl font-bold text-white mb-4 md:mb-0">
+                Academic Dashboard
+            </h1>
+            <div class="content-slide info-slide flex items-center space-x-4 text-white">
+                <p class="flex items-center">
+                    <strong class="mr-2">Roll Number:</strong>
+                    <span id="roll_number" 
+                          hx-get="/api/roll-number"
+                          hx-trigger="load"
+                          hx-swap="innerHTML">
+                        {{ roll_number }}
+                    </span>
+                </p>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Corner Back Button -->
+<a href="/student/dash/" 
+   class="corner-btn"
+   hx-boost="true"
+   role="button"
+   aria-label="Back to Dashboard">
+    <svg xmlns="http://www.w3.org/2000/svg" 
+         fill="none" 
+         viewBox="0 0 24 24" 
+         stroke="currentColor">
+        <path stroke-linecap="round" 
+              stroke-linejoin="round" 
+              stroke-width="2"
+              d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+    </svg>
+    <span class="tooltip">Back to Dashboard</span>
+</a>
+
+
+          <!-- Back to Dashboard Link with Icon -->
+    
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+            <!-- Chart Controls -->
+            <div class="bg-white rounded-lg shadow mb-6">
+                <div class="p-4 sm:p-6 border-b border-gray-200">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+                        <h2 class="text-lg font-medium text-gray-900">Performance Analytics</h2>
+                        <form id="chartForm" class="w-full sm:w-64" 
+                            action="" method="GET">
+                            {% csrf_token %}
+                            <select id="chartType" name="chart_type" 
+                                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                onchange="this.form.submit()">
+                                <option value="bar">Bar Chart</option>
+                                <option value="line">Line Chart</option>
+                                <option value="pie">Pie Chart</option>
+                                <option value="radar">Radar Chart</option>
+                                <option value="doughnut">Doughnut</option>
+                                
+                                </select>
+                        </form>
+
+                    </div>
+                </div>
+
+                <!-- Chart Container -->
+                <div class="p-4 sm:p-6">
+                    <div id="chartContainer" class="relative h-[400px]">
+                        <canvas id="performanceChart"></canvas>
+                        <div id="noDataMessage" class="hidden absolute inset-0 flex items-center justify-center">
+                            <div class="text-center">
+                                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V7a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                                <h3 class="mt-2 text-sm font-medium text-gray-900">No Data Available</h3>
+                                <p class="mt-1 text-sm text-gray-500">No academic records found for visualization.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white rounded-lg shadow p-4 sm:p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Current Semester GPA</h3>
+                    <div id="currentGPA" class="text-3xl font-bold text-blue-600">-</div>
+                </div>
+                <div class="bg-white rounded-lg shadow p-4 sm:p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Overall CGPA</h3>
+                    <div id="overallCGPA" class="text-3xl font-bold text-green-600">-</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let currentChart = null;
+    
+        // Function to update chart
+        function updateChart(data) {
+            if (currentChart) {
+                currentChart.destroy();
+            }
+    
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            const chartType = document.getElementById('chartType').value;
+    
+            const chartConfig = {
+                type: chartType,
+                data: {
+                    labels: data.labels,
+                    datasets: [
+                        {
+                            label: 'GPA',
+                            data: data.gpa,
+                            backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                            borderColor: 'rgb(59, 130, 246)',
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'CGPA',
+                            data: data.cgpa,
+                            backgroundColor: 'rgba(16, 185, 129, 0.5)',
+                            borderColor: 'rgb(16, 185, 129)',
+                            borderWidth: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: chartType !== 'pie' && chartType !== 'radar' ? {
+                        y: {
+                            beginAtZero: true,
+                            max: 10,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    } : undefined,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: 'Semester-wise Performance Analysis',
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            }
+                        }
+                    }
+                }
+            };
+    
+            currentChart = new Chart(ctx, chartConfig);
+    
+            // Update summary cards
+            if (data.gpa && data.gpa.length > 0) {
+                document.getElementById('currentGPA').textContent = data.gpa[data.gpa.length - 1];
+                document.getElementById('overallCGPA').textContent = data.cgpa[data.cgpa.length - 1];
+            }
+        }
+    
+        // Handle HTMX after request
+        document.body.addEventListener('htmx:afterRequest', function(evt) {
+            if (evt.detail.successful) {
+                const data = JSON.parse(evt.detail.xhr.response);
+                
+                if (data.error) {
+                    document.getElementById('performanceChart').style.display = 'none';
+                    document.getElementById('noDataMessage').classList.remove('hidden');
+                    return;
+                }
+    
+                document.getElementById('performanceChart').style.display = 'block';
+                document.getElementById('noDataMessage').classList.add('hidden');
+                
+                updateChart(data);
+            }
+        });
+    
+        // Save selected chart type in local storage
+        function saveSelectedChartType(chartType) {
+            localStorage.setItem('selectedChartType', chartType);
+        }
+    
+        // Restore selected chart type from local storage
+        function restoreSelectedChartType() {
+            const savedChartType = localStorage.getItem('selectedChartType');
+            if (savedChartType) {
+                document.getElementById('chartType').value = savedChartType;
+            }
+        }
+    
+        document.addEventListener('DOMContentLoaded', function() {
+            // Restore selected chart type
+            restoreSelectedChartType();
+    
+            const initialData = {{ initial_data|safe }};
+            if (!initialData.error) {
+                updateChart(initialData);
+            } else {
+                document.getElementById('performanceChart').style.display = 'none';
+                document.getElementById('noDataMessage').classList.remove('hidden');
+            }
+    
+            // Add change event listener to the chart type dropdown
+            const chartTypeSelect = document.getElementById('chartType');
+            chartTypeSelect.addEventListener('change', function() {
+                saveSelectedChartType(chartTypeSelect.value);
+                document.getElementById('chartForm').dispatchEvent(new Event('submit'));
+            });
+        });
+    </script>
+    <script>
+        document.addEventListener('htmx:afterSwap', function(evt) {
+            // Reinitialize animations after HTMX content swap
+            const elements = document.querySelectorAll('.content-slide, .corner-btn');
+            elements.forEach(el => {
+                el.style.animation = 'none';
+                el.offsetHeight; // Trigger reflow
+                el.style.animation = null;
+            });
+        });
+        </script>
+</body>
+</html>
